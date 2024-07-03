@@ -104,6 +104,13 @@ class ModelConfig(BaseModel):
     type: Optional[ModelType]
     parameters: Optional[Dict[str, Any]] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "parameters": self.parameters,
+        }
+
 
 class ModelProviderConfig(BaseModel):
     provider_name: str
@@ -112,6 +119,7 @@ class ModelProviderConfig(BaseModel):
     embedding_model_ids: List[str]
     api_key_env_var: str
     base_url: Optional[str] = None
+    parameters: Optional[dict] = None
 
 
 class EmbedderConfig(BaseModel):
@@ -154,7 +162,7 @@ class VectorDBConfig(BaseModel):
     """
 
     provider: str
-    local: Optional[bool] = None
+    local: bool = False
     url: Optional[str] = None
     api_key: Optional[str] = None
     config: Optional[dict] = None

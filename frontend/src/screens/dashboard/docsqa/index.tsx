@@ -90,6 +90,25 @@ const DocsQA = () => {
   const { data: openapiSpecs } = useGetOpenapiSpecsQuery()
   const [searchAnswer] = useQueryCollectionMutation()
 
+  const modelConfigurations = useMemo(() => {
+    const configs = {}
+    allEnabledModels?.forEach((model: any) => {
+      const defaultParams = JSON.parse(defaultModelConfig).parameters
+      const modelParams = model.parameters || {}
+      const mergedParams = { ...defaultParams, ...modelParams }
+      
+      if ('select_expert' in mergedParams) {
+        const modelNameParts = model.name.split('/')
+        mergedParams.select_expert = modelNameParts[modelNameParts.length - 1]
+      }
+      
+      configs[model.name] = JSON.stringify({
+        parameters: mergedParams
+      }, null, 2)
+    })
+    return configs
+  }, [allEnabledModels])
+
   const allQueryControllers = useMemo(() => {
     if (!openapiSpecs?.paths) return []
     return Object.keys(openapiSpecs?.paths)
@@ -115,6 +134,26 @@ const DocsQA = () => {
       promptTemplate: value.value.prompt_template ?? defaultPrompt,
     }))
   }, [selectedQueryController, openapiSpecs])
+
+  const updateRetrieverConfigWithLLM = (config: string, modelName: string) => {
+    try {
+      const parsedConfig = JSON.parse(config)
+      if (parsedConfig.retriever_llm_configuration) {
+        const [provider, name] = modelName.split('/')
+        const modelConfig = JSON.parse(modelConfigurations[modelName] || defaultModelConfig)
+        parsedConfig.retriever_llm_configuration = {
+          name: modelName,
+          provider: provider,
+          parameters: modelConfig.parameters
+        }
+        return JSON.stringify(parsedConfig, null, 2)
+      }
+      return config
+    } catch (error) {
+      console.error("Error updating retriever config:", error)
+      return config
+    }
+  }
 
   const handlePromptSubmit = async () => {
     setIsRunningPrompt(true)
@@ -235,9 +274,18 @@ const DocsQA = () => {
 
   useEffect(() => {
     if (selectedRetriever) {
-      setRetrieverConfig(JSON.stringify(selectedRetriever.config, null, 2))
+      const updatedConfig = updateRetrieverConfigWithLLM(JSON.stringify(selectedRetriever.config, null, 2), selectedQueryModel)
+      setRetrieverConfig(updatedConfig)
     }
-  }, [selectedRetriever])
+  }, [selectedRetriever, selectedQueryModel])
+
+  useEffect(() => {
+    const config = modelConfigurations[selectedQueryModel] || defaultModelConfig
+    setModelConfig(config)
+    
+    // Update retriever config if it has LLM configuration
+    setRetrieverConfig(prevConfig => updateRetrieverConfigWithLLM(prevConfig, selectedQueryModel))
+  }, [selectedQueryModel, modelConfigurations])
 
   return (
     <>
@@ -332,7 +380,7 @@ const DocsQA = () => {
               <SimpleCodeEditor
                 language="json"
                 height={130}
-                defaultValue={defaultModelConfig}
+                value={modelConfig}
                 onChange={(updatedConfig) =>
                   setModelConfig(updatedConfig ?? '')
                 }
@@ -375,9 +423,10 @@ const DocsQA = () => {
                 language="json"
                 height={140}
                 value={retrieverConfig}
-                onChange={(updatedConfig) =>
-                  setRetrieverConfig(updatedConfig ?? '')
-                }
+                onChange={(updatedConfig) => {
+                  const newConfig = updateRetrieverConfigWithLLM(updatedConfig ?? '', selectedQueryModel)
+                  setRetrieverConfig(newConfig)
+                }}
               />
               <div className="flex justify-between items-center mt-1.5">
                 <div className="text-sm">Stream</div>
@@ -475,7 +524,7 @@ const DocsQA = () => {
                 <div className="h-[calc(100%-3.125rem)] flex justify-center items-center overflow-y-auto">
                   <div className="min-h-[23rem]">
                     <DocsQaInformation
-                      header={'Welcome to DocsQA'}
+                      header={'Welcome to SambaQA'}
                       subHeader={
                         <>
                           <p className="text-center max-w-[28.125rem] mt-2">
