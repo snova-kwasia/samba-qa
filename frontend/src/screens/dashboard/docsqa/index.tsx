@@ -32,7 +32,7 @@ const defaultModelConfig = `{
 }`
 
 const defaultPrompt =
-  'Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}'
+    '<|begin_of_text|><|start_header_id|>system<|end_header_id|> \nYou are an AI assistant specialising in information retrieval and analysis. Answer the following question based only on the given context: \nContext: {context} \nQuestion: {question}<|eot_id|><|start_header_id|>assistant<|end_header_id|>'
 
 interface SelectedRetrieverType {
   key: string
