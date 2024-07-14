@@ -31,3 +31,4 @@ pgdata/
 models_config.json
 test
 sample-data/sambanova_docs
+sample-data/sambanova_docs_processed
