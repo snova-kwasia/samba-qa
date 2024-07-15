@@ -33,3 +33,4 @@ test
 sample-data/sambanova_docs
 sample-data/sambanova_docs_processed
 delpoy.sh
+creds.json

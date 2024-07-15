@@ -4,6 +4,7 @@ from backend.modules.dataloaders.localdirloader import LocalDirLoader
 from backend.modules.dataloaders.truefoundryloader import TrueFoundryLoader
 from backend.modules.dataloaders.webloader import WebLoader
 from backend.modules.dataloaders.confluenceloader import ConfluenceLoader
+from backend.modules.dataloaders.googledriveloader import GoogleDriveLoader
 from backend.settings import settings
 
 register_dataloader("localdir", LocalDirLoader)
@@ -14,3 +15,6 @@ if settings.TFY_API_KEY:
 
 if settings.CONFLUENCE_API_TOKEN:
     register_dataloader("confluence", ConfluenceLoader)
+
+if settings.GCP_SERVICE_ACCOUNT_KEY:
+    register_dataloader("googledrive", GoogleDriveLoader)

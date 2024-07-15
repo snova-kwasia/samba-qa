@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     CONFLUENCE_USER_EMAIL: Optional[str]
     CONFLUENCE_URL: Optional[str]
 
+    #Additional Keys for GDrive
+    GCP_SERVICE_ACCOUNT_KEY: Optional[str]
+    GOOGLE_DRIVE_FOLDER_ID: Optional[str]
+
     LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
     VECTOR_DB_CONFIG = os.getenv("VECTOR_DB_CONFIG", "")
     METADATA_STORE_CONFIG = os.getenv("METADATA_STORE_CONFIG", "")
@@ -86,6 +90,10 @@ class Settings(BaseSettings):
     CONFLUENCE_API_TOKEN = os.getenv("CONFLUENCE_API_TOKEN", "")
     CONFLUENCE_USER_EMAIL = os.getenv("CONFLUENCE_USER_EMAIL", "")
     CONFLUENCE_URL = os.getenv("CONFLUENCE_URL", "")
+
+    #Grive
+    GCP_SERVICE_ACCOUNT_KEY = os.getenv("GCP_SERVICE_ACCOUNT_KEY", "")
+    GOOGLE_DRIVE_FOLDER_ID = os.getenv("GOOGLE_DRIVE_FOLDER_ID", "")
 
     if not VECTOR_DB_CONFIG:
         raise ValueError("VECTOR_DB_CONFIG is not set")
