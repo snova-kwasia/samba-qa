@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     GCP_SERVICE_ACCOUNT_KEY: Optional[str]
     GOOGLE_DRIVE_FOLDER_ID: Optional[str]
 
+    #Additional Keys for Jura
+    JIRA_API_TOKEN: Optional[str]
+    JIRA_EMAIL: Optional[str]
+    JIRA_URL: Optional[str]
+
     LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
     VECTOR_DB_CONFIG = os.getenv("VECTOR_DB_CONFIG", "")
     METADATA_STORE_CONFIG = os.getenv("METADATA_STORE_CONFIG", "")
@@ -91,9 +96,15 @@ class Settings(BaseSettings):
     CONFLUENCE_USER_EMAIL = os.getenv("CONFLUENCE_USER_EMAIL", "")
     CONFLUENCE_URL = os.getenv("CONFLUENCE_URL", "")
 
+    # JIRA
+    JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN", "")
+    JIRA_URL = os.getenv("JIRA_URL", "")
+    JIRA_EMAIL = os.getenv("JIRA_EMAIL", "")
+
     #Grive
     GCP_SERVICE_ACCOUNT_KEY = os.getenv("GCP_SERVICE_ACCOUNT_KEY", "")
     GOOGLE_DRIVE_FOLDER_ID = os.getenv("GOOGLE_DRIVE_FOLDER_ID", "")
+
 
     if not VECTOR_DB_CONFIG:
         raise ValueError("VECTOR_DB_CONFIG is not set")

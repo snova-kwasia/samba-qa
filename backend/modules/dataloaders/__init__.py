@@ -5,6 +5,7 @@ from backend.modules.dataloaders.truefoundryloader import TrueFoundryLoader
 from backend.modules.dataloaders.webloader import WebLoader
 from backend.modules.dataloaders.confluenceloader import ConfluenceLoader
 from backend.modules.dataloaders.googledriveloader import GoogleDriveLoader
+from backend.modules.dataloaders.jiraloader import JiraLoader
 from backend.settings import settings
 
 register_dataloader("localdir", LocalDirLoader)
@@ -18,3 +19,6 @@ if settings.CONFLUENCE_API_TOKEN:
 
 if settings.GCP_SERVICE_ACCOUNT_KEY:
     register_dataloader("googledrive", GoogleDriveLoader)
+
+if settings.JIRA_API_TOKEN:
+    register_dataloader("jira",JiraLoader)
