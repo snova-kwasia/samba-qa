@@ -8,6 +8,7 @@ from unstructured.ingest.interfaces import (
     ChunkingConfig,
 )
 from unstructured.ingest.runner import JiraRunner
+from urllib.parse import urlparse
 
 from backend.logger import logger
 from backend.settings import settings
@@ -31,6 +32,9 @@ class JiraLoader(BaseDataLoader):
         Loads data from a Jira instance specified by the given source URI.
         """
         jira_url = data_source.uri
+
+        parsed_url = urlparse(jira_url)
+        base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
         runner = JiraRunner(
             processor_config=ProcessorConfig(
@@ -58,7 +62,7 @@ class JiraLoader(BaseDataLoader):
                 access_config=JiraAccessConfig(
                     api_token=settings.JIRA_API_TOKEN,
                 ),
-                url=jira_url,
+                url=base_url,
                 user_email=settings.JIRA_EMAIL,
             ),
         )
