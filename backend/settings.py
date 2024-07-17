@@ -51,6 +51,15 @@ class Settings(BaseSettings):
     JIRA_EMAIL: Optional[str]
     JIRA_URL: Optional[str]
 
+    #Additional Keys for Jura
+    SLACK_TOKEN: Optional[str]
+    SLACK_CHANNELS: Optional[list]
+    SLACK_START_DATE: Optional[str]
+    SLACK_END_DATE: Optional[str]
+
+    
+
+
     LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
     VECTOR_DB_CONFIG = os.getenv("VECTOR_DB_CONFIG", "")
     METADATA_STORE_CONFIG = os.getenv("METADATA_STORE_CONFIG", "")
@@ -104,6 +113,12 @@ class Settings(BaseSettings):
     #Grive
     GCP_SERVICE_ACCOUNT_KEY = os.getenv("GCP_SERVICE_ACCOUNT_KEY", "")
     GOOGLE_DRIVE_FOLDER_ID = os.getenv("GOOGLE_DRIVE_FOLDER_ID", "")
+
+    #Slack
+    SLACK_TOKEN = os.getenv("SLACK_TOKEN", "")
+    SLACK_CHANNELS = os.getenv("SLACK_CHANNELS", ["C07CX8TQDAQ"])
+    SLACK_TOKEN = os.getenv("SLACK_START_DATE", "")
+    SLACK_END_DATE = os.getenv("SLACK_END_DATE", "")
 
 
     if not VECTOR_DB_CONFIG:

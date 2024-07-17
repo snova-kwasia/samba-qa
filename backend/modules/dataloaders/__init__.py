@@ -6,6 +6,7 @@ from backend.modules.dataloaders.webloader import WebLoader
 from backend.modules.dataloaders.confluenceloader import ConfluenceLoader
 from backend.modules.dataloaders.googledriveloader import GoogleDriveLoader
 from backend.modules.dataloaders.jiraloader import JiraLoader
+from backend.modules.dataloaders.slackloader import SlackLoader
 from backend.settings import settings
 
 register_dataloader("localdir", LocalDirLoader)
@@ -22,3 +23,8 @@ if settings.GCP_SERVICE_ACCOUNT_KEY:
 
 if settings.JIRA_API_TOKEN:
     register_dataloader("jira",JiraLoader)
+
+if settings.SLACK_TOKEN:
+    register_dataloader("slack",SlackLoader)
+    
+

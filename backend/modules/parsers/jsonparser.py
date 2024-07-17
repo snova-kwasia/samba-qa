@@ -10,7 +10,7 @@ class JSONParser(BaseParser):
     JSONParser is a parser class for processing JSON files.
     """
 
-    supported_file_extensions = [".json"]
+    supported_file_extensions = [".json"] #For Unstructured Output
 
     def __init__(self, max_chunk_size: int = 1000, *args, **kwargs):
         """
