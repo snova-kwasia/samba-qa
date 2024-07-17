@@ -116,8 +116,8 @@ class Settings(BaseSettings):
 
     #Slack
     SLACK_TOKEN = os.getenv("SLACK_TOKEN", "")
-    SLACK_CHANNELS = os.getenv("SLACK_CHANNELS", ["C07CX8TQDAQ"])
-    SLACK_TOKEN = os.getenv("SLACK_START_DATE", "")
+    SLACK_CHANNELS = os.getenv("SLACK_CHANNELS", [""])
+    SLACK_START_DATE = os.getenv("SLACK_START_DATE", "")
     SLACK_END_DATE = os.getenv("SLACK_END_DATE", "")
 
 

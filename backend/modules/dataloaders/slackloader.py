@@ -1,6 +1,7 @@
 import os
 from typing import Dict, Iterator, List
 from urllib.parse import urlparse
+from datetime import datetime, timedelta
 from unstructured.ingest.connector.slack import SimpleSlackConfig, SlackAccessConfig
 from unstructured.ingest.interfaces import (
     PartitionConfig,
@@ -14,6 +15,13 @@ from backend.logger import logger
 from backend.settings import settings
 from backend.modules.dataloaders.loader import BaseDataLoader
 from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
+
+# Default number of days to look back if start_date is not specified
+DEFAULT_DAYS_LOOKBACK = 30
+
+def format_date(date: datetime) -> str:
+    """Format date to YYYY-MM-DDTHH:MM:SS"""
+    return date.strftime("%Y-%m-%dT%H:%M:%S")
 
 class SlackLoader(BaseDataLoader):
     """
@@ -36,6 +44,20 @@ class SlackLoader(BaseDataLoader):
         # Parse the URL to extract the workspace name or ID if needed
         parsed_url = urlparse(slack_url)
         workspace = parsed_url.netloc.split('.')[0]  # This assumes the URL format is 'workspace.slack.com'
+
+        # Determine start and end dates
+        now = datetime.now()
+        
+        if settings.SLACK_END_DATE:
+            end_date = settings.SLACK_END_DATE
+        else:
+            end_date = format_date(now)
+
+        if settings.SLACK_START_DATE:
+            start_date = settings.SLACK_START_DATE
+        else:
+            # If start_date is not specified, use the default lookback period
+            start_date = format_date(now - timedelta(days=DEFAULT_DAYS_LOOKBACK))
 
         runner = SlackRunner(
             processor_config=ProcessorConfig(
@@ -62,14 +84,14 @@ class SlackLoader(BaseDataLoader):
                 access_config=SlackAccessConfig(
                     token=settings.SLACK_TOKEN,
                 ),
-                channels=settings.SLACK_CHANNELS,  # Assuming you have this in settings
-                # start_date=settings.SLACK_START_DATE,  # Assuming you have this in settings
-                # end_date=settings.SLACK_END_DATE,  # Assuming you have this in settings
+                channels=settings.SLACK_CHANNELS,
+                start_date=start_date,
+                end_date=end_date,
             ),
         )
 
         # Run the Slack runner
-        logger.info("Starting Slack data ingestion with chunking")
+        logger.info(f"Starting Slack data ingestion with chunking from {start_date} to {end_date}")
         runner.run()
         logger.info("Slack data ingestion and chunking completed")
 
