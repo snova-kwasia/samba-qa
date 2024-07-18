@@ -27,10 +27,12 @@ class Settings(BaseSettings):
     SAMBASTUDIO_PROJECT_ID: Optional[str]
     SAMBASTUDIO_ENDPOINT_ID: Optional[str]
     SAMBASTUDIO_API_KEY: Optional[str]
+    SAMBASTUDIO_BASE_URI: Optional[str]
     SAMBASTUDIO_EMBEDDINGS_BASE_URL: Optional[str]
     SAMBASTUDIO_EMBEDDINGS_PROJECT_ID: Optional[str]
     SAMBASTUDIO_EMBEDDINGS_ENDPOINT_ID: Optional[str]
     SAMBASTUDIO_EMBEDDINGS_API_KEY: Optional[str]
+    
 
     REPLICATE_API_TOKEN: Optional[str]
     WB_PROJECT: Optional[str]
@@ -81,6 +83,7 @@ class Settings(BaseSettings):
     SAMBASTUDIO_PROJECT_ID = os.getenv("SAMBASTUDIO_PROJECT_ID", "")
     SAMBASTUDIO_ENDPOINT_ID = os.getenv("SAMBASTUDIO_ENDPOINT_ID", "")
     SAMBASTUDIO_API_KEY = os.getenv("SAMBASTUDIO_API_KEY", "")
+    SAMBASTUDIO_BASE_URI = os.getenv("SAMBASTUDIO_BASE_URI", "")
 
     # SambaStudioEmbeddingSettings
     SAMBASTUDIO_EMBEDDINGS_BASE_URL = os.getenv("SAMBASTUDIO_EMBEDDINGS_BASE_URL", "")
@@ -91,6 +94,7 @@ class Settings(BaseSettings):
         "SAMBASTUDIO_EMBEDDINGS_ENDPOINT_ID", ""
     )
     SAMBASTUDIO_EMBEDDINGS_API_KEY = os.getenv("SAMBASTUDIO_EMBEDDINGS_API_KEY", "")
+
 
     # Replicate LLMs
     REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN", "")
