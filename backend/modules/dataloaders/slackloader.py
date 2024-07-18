@@ -17,7 +17,7 @@ from backend.modules.dataloaders.loader import BaseDataLoader
 from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
 
 # Default number of days to look back if start_date is not specified
-DEFAULT_DAYS_LOOKBACK = 30
+DEFAULT_DAYS_LOOKBACK = 7
 
 def format_date(date: datetime) -> str:
     """Format date to YYYY-MM-DDTHH:MM:SS"""
