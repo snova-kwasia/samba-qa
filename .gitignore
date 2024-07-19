@@ -34,3 +34,5 @@ sample-data/sambanova_docs
 sample-data/sambanova_docs_processed
 delpoy.sh
 creds.json
+connect_to_sqa.sh
+rag_query.sh
