@@ -55,6 +55,7 @@ class Settings(BaseSettings):
 
     #Additional Keys for Jura
     SLACK_TOKEN: Optional[str]
+    SLACK_APP_TOKEN: Optional[str]
     SLACK_CHANNELS: Optional[list]
     SLACK_START_DATE: Optional[str]
     SLACK_END_DATE: Optional[str]
@@ -120,6 +121,7 @@ class Settings(BaseSettings):
 
     #Slack
     SLACK_TOKEN = os.getenv("SLACK_TOKEN", "")
+    SLACK_APP_TOKEN= os.getenv("SLACK_APP_TOKEN", "")
     SLACK_CHANNELS = os.getenv("SLACK_CHANNELS", [""])
     SLACK_START_DATE = os.getenv("SLACK_START_DATE", "")
     SLACK_END_DATE = os.getenv("SLACK_END_DATE", "")
