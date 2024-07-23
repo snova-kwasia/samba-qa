@@ -104,8 +104,8 @@ services:
             dockerfile: ./backend/Dockerfile
             args:
                 - ADD_PRISMA=1
-                - ADD_PYTORCH=0 # Only for PdfTableParser
-                - ADD_PARSER=0 # Only for PdfTableParser
+                - ADD_PYTORCH=0
+                - ADD_PARSER=0
         restart: unless-stopped
         container_name: cognita-backend
         ports:
@@ -140,11 +140,32 @@ services:
             - TFY_HOST=${TFY_HOST}
             - TFY_LLM_GATEWAY_URL=${TFY_LLM_GATEWAY_URL}
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
-        entrypoint: /bin/bash
-        command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
         networks:
             - cognita-docker
 
+    cognita-slackapp:
+        build:
+            context: .
+            dockerfile: ./backend/Dockerfile
+            args:
+                - ADD_PRISMA=1
+                - ADD_PYTORCH=0
+                - ADD_PARSER=0
+        restart: unless-stopped
+        container_name: cognita-slackapp
+        depends_on:
+            cognita-backend:
+                condition: service_healthy
+                restart: true
+        env_file:
+            - ./.env
+        environment:
+            - RUN_SLACKAPP=true
+            - SAMBAQA_API_URL=http://cognita-backend:8000/retrievers/basic-rag/answer
+        networks:
+            - cognita-docker
+
+      
     cognita-frontend:
         build:
             context: ./frontend
@@ -166,6 +187,7 @@ services:
                 restart: true
         networks:
             - cognita-docker
+    
 
 networks:
     cognita-docker:

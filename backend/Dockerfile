@@ -10,10 +10,12 @@ RUN python3 -m venv /virtualenvs/venv/
 COPY backend/requirements.txt /tmp/requirements.txt
 COPY backend/vectordb.requirements.txt /tmp/vectordb.requirements.txt
 COPY backend/parsers.requirements.txt /tmp/parsers.requirements.txt
+COPY backend/slackapp/requirements.txt /tmp/slackapp.requirements.txt
 
 # Install Python packages
 RUN python3 -m pip install -U pip setuptools wheel && \
-    python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/requirements.txt
+    python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/requirements.txt && \
+    python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/slackapp.requirements.txt
 
 ENV LD_LIBRARY_PATH=/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cublas/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_cupti/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_runtime/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cufft/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/curand/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cusolver/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cusparse/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/nccl/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/nvtx/lib:/virtualenvs/venv/lib/python3.11/site-packages/torch/lib/:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
@@ -45,3 +47,9 @@ COPY . /app
 
 # Set the working directory
 WORKDIR /app
+
+# Add an entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

@@ -45,3 +45,4 @@ langsmith==0.1.71
 #unstrutured
 unstructured[all-docs]==0.13.6
 unstructured[google-drive,jira,slack]==0.13.6
+
