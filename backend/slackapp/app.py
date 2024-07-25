@@ -6,6 +6,7 @@ repo_dir = os.path.abspath(os.path.join(kit_dir, ".."))
 sys.path.append(kit_dir)
 sys.path.append(repo_dir)
 from dotenv import load_dotenv
+import re
 
 # Join the repo_dir with the .env file path
 env_path = os.path.join(repo_dir, '.env')
@@ -67,7 +68,8 @@ def handle_message(message, say):
 @app.event("app_mention")
 def handle_app_mention_events(body, logger,say):
     question = body["event"]["text"]
-    response = query_sambaqa(question)
+    cleaned_question = re.sub(r"<@U[A-Z0-9]+>\s*", "", question)
+    response = query_sambaqa(cleaned_question)
     say(response)
     logger.info(body)
 

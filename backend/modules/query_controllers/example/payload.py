@@ -8,7 +8,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     },
     "prompt_template": PROMPT,
     "retriever_name": "vectorstore",
-    "retriever_config": {"search_type": "similarity", "search_kwargs": {"k": 5}},
+    "retriever_config": {"search_type": "similarity", "search_kwargs": {"k": 10}},
     "stream": False,
 }
 
@@ -86,9 +86,9 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
     "retriever_config": {
         "compressor_model_provider": "mixedbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-        "top_k": 5,
+        "top_k": 10,
         "search_type": "similarity",
-        "search_kwargs": {"k": 10},
+        "search_kwargs": {"k": 15},
     },
     "stream": False,
 }
