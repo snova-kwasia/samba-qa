@@ -59,20 +59,31 @@ def query_sambaqa(question):
         return f"Error querying SambaQA: {str(e)}"
 
 @app.event("message")
-def handle_message(message, say):
-    if message['channel_type'] == 'im':
-        question = message['text']
-        response = query_sambaqa(question)
-        say(response)
+def handle_message(message, say, logger):
+    try:
+        if message['channel_type'] == 'im':
+            question = message['text']
+            cleaned_question = re.sub(r'<@U[A-Z0-9]+>\s*', '', question)
+            response = query_sambaqa(cleaned_question)
+            say(response)
+    except Exception as e:
+        error_message = "SambaQA is experiencing difficulties, hang tight while we investigate."
+        logger.error(f"Error in handle_message: {str(e)}")
+        say(error_message)
 
 @app.event("app_mention")
-def handle_app_mention_events(body, logger,say):
-    question = body["event"]["text"]
-    cleaned_question = re.sub(r"<@U[A-Z0-9]+>\s*", "", question)
-    response = query_sambaqa(cleaned_question)
-    say(response)
-    logger.info(body)
-
+def handle_app_mention_events(body, logger, say):
+    try:
+        question = body["event"]["text"]
+        cleaned_question = re.sub(r'<@U[A-Z0-9]+>\s*', '', question)
+        response = query_sambaqa(cleaned_question)
+        say(response)
+        logger.info(body)
+    except Exception as
+        error_message = "SambaQA is experiencing difficulties, hang tight while we investigate."
+        logger.error(f"Error in handle_app_mention_events: {str(e)}")
+        say(error_message)
+        
 # Start your app
 if __name__ == "__main__":
     SocketModeHandler(app,  os.getenv("SLACK_APP_TOKEN", "")).start()
