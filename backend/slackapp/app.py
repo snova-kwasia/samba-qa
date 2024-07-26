@@ -79,11 +79,11 @@ def handle_app_mention_events(body, logger, say):
         response = query_sambaqa(cleaned_question)
         say(response)
         logger.info(body)
-    except Exception as
+    except Exception as e:
         error_message = "SambaQA is experiencing difficulties, hang tight while we investigate."
         logger.error(f"Error in handle_app_mention_events: {str(e)}")
         say(error_message)
-        
+
 # Start your app
 if __name__ == "__main__":
     SocketModeHandler(app,  os.getenv("SLACK_APP_TOKEN", "")).start()
