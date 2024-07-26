@@ -63,7 +63,10 @@ def handle_message(message, say, logger):
     try:
         if message['channel_type'] == 'im':
             question = message['text']
-            cleaned_question = re.sub(r'<@U[A-Z0-9]+>\s*', '', question)
+            cleaned_question = re.sub(r'^<@U[A-Z0-9]+>:?\s*', '', question.strip())
+            logger.info(f"Original question: {question}")
+            logger.info(f"Cleaned question: {cleaned_question}")
+            response = query_sambaqa(cleaned_question)
             response = query_sambaqa(cleaned_question)
             say(response)
     except Exception as e:
@@ -75,7 +78,10 @@ def handle_message(message, say, logger):
 def handle_app_mention_events(body, logger, say):
     try:
         question = body["event"]["text"]
-        cleaned_question = re.sub(r'<@U[A-Z0-9]+>\s*', '', question)
+        # Regex pattern to handle various whitespace scenarios and slackbot name
+        cleaned_question = re.sub(r'^<@U[A-Z0-9]+>:?\s*', '', question.strip())
+        logger.info(f"Original question: {question}")
+        logger.info(f"Cleaned question: {cleaned_question}")
         response = query_sambaqa(cleaned_question)
         say(response)
         logger.info(body)
