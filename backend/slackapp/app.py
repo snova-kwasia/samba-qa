@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+import json
 from dotenv import load_dotenv
 import re
 import requests
@@ -8,7 +9,7 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Setup path and environment variables
@@ -41,13 +42,25 @@ def clean_input(text):
     # Remove extra whitespace
     text = ' '.join(text.split())
     
-    return text
+    # Remove any non-ASCII characters
+    text = ''.join(char for char in text if ord(char) < 128)
+    
+    # Replace potentially problematic characters
+    original_text = text
+    problematic_chars = {'{': '(', '}': ')', '[': '(', ']': ')', '"': "'", "'": "'"}
+    for char, replacement in problematic_chars.items():
+        text = text.replace(char, replacement)
+    
+    if text != original_text:
+        logger.info(f"Input contained problematic characters. Original: '{original_text}', Cleaned: '{text}'")
+        return text, True
+    
+    return text, False
 
 def validate_input(text):
     if len(text) < 1 or len(text) > 1000:  # Adjust these limits as needed
         raise ValueError("Input must be between 1 and 1000 characters")
     
-    # Add more validation rules as needed
     if not text.strip():
         raise ValueError("Input cannot be empty")
     
@@ -57,11 +70,13 @@ def query_sambaqa(question):
     logger.info(f"Original question: {question}")
     
     try:
-        cleaned_question = clean_input(question)
+        cleaned_question, was_modified = clean_input(question)
         logger.info(f"Cleaned question: {cleaned_question}")
         
         validated_question = validate_input(cleaned_question)
         logger.info(f"Validated question: {validated_question}")
+
+        modification_message = "" if was_modified else ""
 
         payload = {
             "collection_name": DEFAULT_COLLECTION,
@@ -90,16 +105,32 @@ def query_sambaqa(question):
 
         response = requests.post(SAMBAQA_API_URL, json=payload)
         response.raise_for_status()
-        return response.json()['answer']
+        
+        if not response.text.strip():
+            logger.error("Received empty response from SambaQA API")
+            return f"{modification_message}I apologize, but I received an empty response from my knowledge base. Could you please rephrase your question or try again later?"
+        
+        try:
+            json_response = response.json()
+        except json.JSONDecodeError as json_err:
+            logger.error(f"JSON Decode Error: {str(json_err)}")
+            logger.error(f"Response content: {response.text}")
+            return f"{modification_message}I'm sorry, but I'm having trouble understanding the response from my knowledge base. Could you please try asking your question again in a different way?"
+        
+        if 'answer' not in json_response:
+            logger.error(f"Unexpected response structure: {json_response}")
+            return f"{modification_message}I apologize, but I received an unexpected response format. Could you please rephrase your question or try again later?"
+        
+        return f"{modification_message}{json_response['answer']}"
     except ValueError as e:
         logger.error(f"Input validation error: {str(e)}")
-        return f"Error: {str(e)}"
+        return f"I'm sorry, but there seems to be an issue with your input: {str(e)}. Could you please try rephrasing your question?"
     except requests.RequestException as e:
         logger.error(f"Error querying SambaQA: {str(e)}")
-        return f"Error querying SambaQA: {str(e)}"
+        return "I apologize, but I'm having trouble connecting to my knowledge base at the moment. Could you please try again in a few minutes?"
     except Exception as e:
         logger.error(f"Unexpected error in query_sambaqa: {str(e)}", exc_info=True)
-        return "An unexpected error occurred. Please try again later."
+        return "I'm sorry, but an unexpected error occurred while processing your request. Could you please try again later or rephrase your question?"
 
 @app.event("message")
 def handle_message(message, say):
@@ -109,7 +140,7 @@ def handle_message(message, say):
             response = query_sambaqa(question)
             say(response)
     except Exception as e:
-        error_message = "SambaQA is experiencing difficulties, hang tight while we investigate."
+        error_message = "I apologize, but I'm experiencing some difficulties at the moment. Our team is working on resolving the issue. Could you please try again later?"
         logger.error(f"Error in handle_message: {str(e)}", exc_info=True)
         say(error_message)
 
@@ -121,7 +152,7 @@ def handle_app_mention_events(body, say):
         say(response)
         logger.info(f"App mention event body: {body}")
     except Exception as e:
-        error_message = "SambaQA is experiencing difficulties, hang tight while we investigate."
+        error_message = "I apologize, but I'm experiencing some difficulties at the moment. Our team is working on resolving the issue. Could you please try again later?"
         logger.error(f"Error in handle_app_mention_events: {str(e)}", exc_info=True)
         say(error_message)
 
