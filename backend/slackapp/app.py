@@ -132,17 +132,6 @@ def query_sambaqa(question):
         logger.error(f"Unexpected error in query_sambaqa: {str(e)}", exc_info=True)
         return "I'm sorry, but an unexpected error occurred while processing your request. Could you please try again later or rephrase your question?"
 
-@app.event("message")
-def handle_message(message, say):
-    try:
-        if message['channel_type'] == 'im':
-            question = message['text']
-            response = query_sambaqa(question)
-            say(response)
-    except Exception as e:
-        error_message = "I apologize, but I'm experiencing some difficulties at the moment. Our team is working on resolving the issue. Could you please try again later?"
-        logger.error(f"Error in handle_message: {str(e)}", exc_info=True)
-        say(error_message)
 
 @app.event("app_mention")
 def handle_app_mention_events(body, say):
