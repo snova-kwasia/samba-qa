@@ -45,4 +45,7 @@ langsmith==0.1.71
 #unstrutured
 unstructured[all-docs]==0.13.6
 unstructured[google-drive,jira,slack]==0.13.6
+deepdoctection==0.32.0
+timm==0.9.16
+python-doctr==0.8.1
 
