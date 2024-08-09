@@ -88,7 +88,7 @@ def query_sambaqa(question):
             "retriever_config": {
                 "compressor_model_provider": "mixedbread-ai",
                 "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-                "top_k": 12,
+                "top_k": 9,
                 "search_type": "similarity",
                 "search_kwargs": {"k": 20},
                 "filter": {},
