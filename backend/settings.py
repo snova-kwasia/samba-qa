@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     SAMBASTUDIO_EMBEDDINGS_PROJECT_ID: Optional[str]
     SAMBASTUDIO_EMBEDDINGS_ENDPOINT_ID: Optional[str]
     SAMBASTUDIO_EMBEDDINGS_API_KEY: Optional[str]
+    FASTAPI_URL: Optional[str]
+    FASTAPI_API_KEY: Optional[str]
+
+
     
 
     REPLICATE_API_TOKEN: Optional[str]
@@ -85,6 +89,12 @@ class Settings(BaseSettings):
     SAMBASTUDIO_ENDPOINT_ID = os.getenv("SAMBASTUDIO_ENDPOINT_ID", "")
     SAMBASTUDIO_API_KEY = os.getenv("SAMBASTUDIO_API_KEY", "")
     SAMBASTUDIO_BASE_URI = os.getenv("SAMBASTUDIO_BASE_URI", "")
+
+    FASTAPI_URL = os.getenv("FASTAPI_URL", "")
+    FASTAPI_API_KEY = os.getenv("FASTAPI_API_KEY", "")
+
+
+
 
     # SambaStudioEmbeddingSettings
     SAMBASTUDIO_EMBEDDINGS_BASE_URL = os.getenv("SAMBASTUDIO_EMBEDDINGS_BASE_URL", "")

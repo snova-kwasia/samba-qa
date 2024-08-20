@@ -13,6 +13,8 @@ from langchain_community.embeddings.sambanova import SambaStudioEmbeddings
 
 from backend.modules.model_gateway import MODELS_CONFIG_PATH
 from backend.types import ModelConfig, ModelProviderConfig, ModelType
+from backend.modules.model_gateway.model_wrappers.langchain_llms import SambaStudio, Sambaverse, SambaNovaFastAPI 
+from backend.settings import settings
 
 
 class ModelGateway:
@@ -120,15 +122,20 @@ class ModelGateway:
                 base_url=model_provider_config.base_url,
             )
         elif model_provider_config.provider_name == "sambastudio":
-            model_kwargs = (
-                model_config.parameters.copy() if model_config.parameters else {}
-            )
-            model_kwargs["select_expert"] = model_id
-            model_kwargs.update(model_config.parameters)
-            return SambaStudio(
-                streaming=True,
-                model_kwargs=model_kwargs,
-            )
+            
+            if settings.FASTAPI_API_KEY:
+                return SambaNovaFastAPI(model=model_id)
+            else:
+                model_kwargs = (
+                    model_config.parameters.copy() if model_config.parameters else {}
+                )
+                model_kwargs["select_expert"] = model_id
+                model_kwargs.update(model_config.parameters)
+                return SambaStudio(
+                    streaming=True,
+                    model_kwargs=model_kwargs,
+                )
+            
         elif model_provider_config.provider_name == "replicate":
             replicate_model_name =  "/".join(model_config.name.split("/")[1:])
             return Replicate(

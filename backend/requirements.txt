@@ -1,8 +1,9 @@
 GitPython==3.1.43
-langchain==0.2.1
-langchain-community==0.2.1
+langchain==0.2.11
+langchain-community==0.2.10
 langchain-openai==0.1.7
-langchain-core==0.2.0
+langchain-core>=0.2.6,<0.3.0
+langchain-experimental==0.0.60
 openai==1.35.3
 tiktoken==0.7.0
 uvicorn==0.23.2
@@ -40,7 +41,7 @@ prisma==0.13.1
 replicate==0.26.0
 
 #LoggingTracing
-langsmith==0.1.71
+langsmith==0.1.91
 
 #unstrutured
 unstructured[all-docs]==0.13.6
