@@ -88,7 +88,7 @@ def query_sambaqa(question):
             "retriever_config": {
                 "search_type": "similarity",
                 "search_kwargs": {
-                    "k": 12
+                    "k": 9
                 },
                 "filter": {}
             },
