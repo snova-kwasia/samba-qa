@@ -30,7 +30,7 @@ SAMBAQA_API_URL = os.getenv(
     "SAMBAQA_API_URL", "http://localhost:8000/retrievers/basic-rag/answer"
 )
 DEFAULT_COLLECTION = "snspubdocumentation"
-DEFAULT_MODEL = "sambastudio/Meta-Llama-3-70B-Instruct"
+DEFAULT_MODEL = "sambastudio/llama3-405b"
 
 
 def clean_input(text):
@@ -78,21 +78,21 @@ def query_sambaqa(question):
                 "parameters": {
                     "temperature": 0.1,
                     "do_sample": False,
-                    "max_tokens_to_generate": 1024,
+                    "max_tokens_to_generate": 2048,
                     "select_expert": DEFAULT_MODEL.split("/")[-1],
                     "process_prompt": False,
                 },
             },
             "prompt_template": "<|begin_of_text|><|start_header_id|>system<|end_header_id|> \nYou are an AI assistant specializing in accurate information retrieval and analysis. Your primary goal is to provide reliable answers based solely on the given context. Follow these guidelines:\n\n1. Answer Step-by-Step:\n   - Break down your reasoning process.\n   - Explain how each piece of information relates to the question.\n\n2. Source Attribution:\n   - ALWAYS cite sources for any information you use in your response.\n   - Use the following format for citations:\n     a) For direct quotes: [Quote: \"exact text\"]\n     b) For paraphrased information: [Source: summary of information]\n     c) For weblinks: [Link: full URL]\n   - When possible, include any additional source details provided, such as author, date, or title.\n\n3. Accuracy Check:\n   - After formulating your answer, review it against the context.\n   - Ensure every statement is supported by the provided information.\n\n4. Handling Uncertainty:\n   - If the context doesn't contain enough information, say \"The given context does not provide sufficient information to answer this question fully.\"\n   - For partial answers, clearly state what you can and cannot answer based on the context.\n\n5. No External Knowledge:\n   - Do not use any information beyond the given context.\n   - If tempted to add external information, stop and reassess.\n\n6. Avoid Assumptions:\n   - Do not infer or extrapolate beyond what's explicitly stated in the context.\n   - If the question requires assumptions, clearly state them as such.\n\nRemember: It's better to provide a partial answer or admit lack of information than to give an inaccurate or unsupported response.\n\nContext: {context}\n\nQuestion: {question}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n",
+            "retriever_name": "vectorstore",
             "retriever_config": {
-                "compressor_model_provider": "mixedbread-ai",
-                "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-                "top_k": 12,
                 "search_type": "similarity",
-                "search_kwargs": {"k": 20},
-                "filter": {},
+                "search_kwargs": {
+                    "k": 12
+                },
+                "filter": {}
             },
-            "stream": False,
+            "stream": False
         }
 
         response = requests.post(SAMBAQA_API_URL, json=payload)
