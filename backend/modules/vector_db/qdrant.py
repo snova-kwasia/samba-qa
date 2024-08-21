@@ -11,15 +11,19 @@ from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import DataPointVector, QdrantClientConfig, VectorDBConfig
 
+from fastembed.sparse.bm25 import Bm25
+from fastembed.late_interaction import LateInteractionTextEmbedding
+from tqdm import tqdm
+
+
+
 MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
-
 
 class QdrantVectorDB(BaseVectorDB):
     def __init__(self, config: VectorDBConfig):
         logger.debug(f"Connecting to qdrant using config: {config.dict()}")
         if config.local is True:
-            # TODO: make this path customizable
             self.qdrant_client = QdrantClient(
                 path="./qdrant_db",
             )
@@ -43,21 +47,39 @@ class QdrantVectorDB(BaseVectorDB):
     def create_collection(self, collection_name: str, embeddings: Embeddings):
         logger.debug(f"[Qdrant] Creating new collection {collection_name}")
 
-        # Calculate embedding size
-        logger.debug(f"[Qdrant] Embedding a dummy doc to get vector dimensions")
-        partial_embeddings = embeddings.embed_documents(["Initial document"])
-        vector_size = len(partial_embeddings[0])
-        logger.debug(f"Vector size: {vector_size}")
+        # Calculate embedding size for dense embeddings
+        dense_vector_size = len(embeddings.embed_documents(["Initial document"])[0])
+
+        # Get size for late interaction embeddings
+        late_interaction_model = LateInteractionTextEmbedding("colbert-ir/colbertv2.0")
+        late_interaction_embeddings = list(late_interaction_model.passage_embed(["Initial document"]))
+        late_interaction_size = len(late_interaction_embeddings[0][0])
 
         self.qdrant_client.create_collection(
             collection_name=collection_name,
-            vectors_config=VectorParams(
-                size=vector_size,  # embedding dimension
-                distance=Distance.COSINE,
-                on_disk=True,
-            ),
-            replication_factor=3,
+            vectors_config={
+                "dense_embedding": models.VectorParams(
+                    size=dense_vector_size,
+                    distance=models.Distance.COSINE,
+                    on_disk=True
+                ),
+                "late_interaction": models.VectorParams(
+                    size=late_interaction_size,
+                    on_disk=True,
+                    distance=models.Distance.COSINE,
+                    multivector_config=models.MultiVectorConfig(
+                        comparator=models.MultiVectorComparator.MAX_SIM,
+                    )
+                ),
+            },
+            sparse_vectors_config={
+                "bm25": models.SparseVectorParams(
+                    modifier=models.Modifier.IDF,
+                    index=models.SparseIndexParams(on_disk=True)
+                )
+            }
         )
+
         self.qdrant_client.create_payload_index(
             collection_name=collection_name,
             field_name=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
@@ -70,7 +92,6 @@ class QdrantVectorDB(BaseVectorDB):
     ):
         if not incremental:
             return []
-        # For incremental deletion, we delete the documents with the same document_id
         logger.debug(
             f"[Qdrant] Incremental Ingestion: Fetching documents for {len(data_point_fqns)} data point fqns for collection {collection_name}"
         )
@@ -120,10 +141,9 @@ class QdrantVectorDB(BaseVectorDB):
         if len(documents) == 0:
             logger.warning("No documents to index")
             return
-        # get record IDs to be upserted
-        logger.debug(
-            f"[Qdrant] Adding {len(documents)} documents to collection {collection_name}"
-        )
+        
+        logger.debug(f"[Qdrant] Adding {len(documents)} documents to collection {collection_name}")
+        
         data_point_fqns = []
         for document in documents:
             if document.metadata.get(DATA_POINT_FQN_METADATA_KEY):
@@ -136,24 +156,75 @@ class QdrantVectorDB(BaseVectorDB):
             incremental=incremental,
         )
 
-        # Add Documents
-        Qdrant(
-            client=self.qdrant_client,
-            collection_name=collection_name,
-            embeddings=embeddings,
-        ).add_documents(documents=documents)
+        bm25_embedding_model = Bm25("Qdrant/bm25")
+        late_interaction_model = LateInteractionTextEmbedding("colbert-ir/colbertv2.0")
+
+        batch_size = 64
+
+        total_batches = (len(documents) + batch_size - 1) // batch_size
+        for i in tqdm(range(0, len(documents), batch_size), total=total_batches, desc="Processing batches"):
+            batch = documents[i:i+batch_size]
+            texts = [doc.page_content for doc in batch]
+
+            logger.debug(f"[Qdrant] Generating dense embeddings for batch {i//batch_size + 1}/{total_batches}")
+            dense_embeddings = embeddings.embed_documents(texts)
+            logger.debug(f"[Qdrant] Dense embeddings generated for batch {i//batch_size + 1}/{total_batches}")
+
+            logger.debug(f"[Qdrant] Generating sparse embeddings for batch {i//batch_size + 1}/{total_batches}")
+            sparse_embeddings = [
+        {
+            "values": emb.values.tolist(),
+            "indices": emb.indices.tolist()
+        }
+        for emb in bm25_embedding_model.passage_embed(texts)
+    ]
+            logger.debug(f"[Qdrant] Sparse embeddings generated for batch {i//batch_size + 1}/{total_batches}")
+
+            logger.debug(f"[Qdrant] Generating late interaction embeddings for batch {i//batch_size + 1}/{total_batches}")
+            late_interaction_embeddings = list(late_interaction_model.passage_embed(texts))
+            logger.debug(f"[Qdrant] Late interaction embeddings generated for batch {i//batch_size + 1}/{total_batches}")
+
+            points = []
+            for j, doc in enumerate(batch):
+                point = models.PointStruct(
+                    id=int(doc.metadata.get("_id", i * batch_size + j)),
+                    vector={
+                        "dense_embedding": dense_embeddings[j],
+                        "bm25": sparse_embeddings[j],
+                        "late_interaction": late_interaction_embeddings[j].tolist(),
+                    },
+                    payload={
+                        "metadata": doc.metadata,
+                        "content": doc.page_content,
+                    }
+                )
+                points.append(point)
+
+            logger.debug(f"[Qdrant] Upserting batch {i//batch_size + 1}/{total_batches}")
+            try:
+                logger.debug(f"Sample point structure: {points[0].dict()}")
+                self.qdrant_client.upload_points(
+                collection_name=collection_name,
+                points=points,
+                batch_size=batch_size,
+            )
+                logger.debug(f"[Qdrant] Batch {i//batch_size + 1}/{total_batches} upserted successfully")
+            except Exception as e:
+                logger.error(f"Error upserting batch {i//batch_size + 1}/{total_batches}: {str(e)}")
+                logger.error(f"First point in batch: {points[0]}")
+                raise e
+
         logger.debug(
             f"[Qdrant] Added {len(documents)} documents to collection {collection_name}"
         )
 
-        # Delete Documents
         if len(record_ids_to_be_upserted):
             logger.debug(
-                f"[Qdrant] Deleting {len(documents)} outdated documents from collection {collection_name}"
+                f"[Qdrant] Deleting {len(record_ids_to_be_upserted)} outdated documents from collection {collection_name}"
             )
-            for i in range(0, len(record_ids_to_be_upserted), BATCH_SIZE):
+            for i in range(0, len(record_ids_to_be_upserted), batch_size):
                 record_ids_to_be_processed = record_ids_to_be_upserted[
-                    i : i + BATCH_SIZE
+                    i : i + batch_size
                 ]
                 self.qdrant_client.delete(
                     collection_name=collection_name,
@@ -162,7 +233,7 @@ class QdrantVectorDB(BaseVectorDB):
                     ),
                 )
             logger.debug(
-                f"[Qdrant] Deleted {len(documents)} outdated documents from collection {collection_name}"
+                f"[Qdrant] Deleted {len(record_ids_to_be_upserted)} outdated documents from collection {collection_name}"
             )
 
     def get_collections(self) -> List[str]:
@@ -250,9 +321,6 @@ class QdrantVectorDB(BaseVectorDB):
         data_point_vectors: List[DataPointVector],
         batch_size: int = BATCH_SIZE,
     ):
-        """
-        Delete data point vectors from the collection
-        """
         logger.debug(f"[Qdrant] Deleting {len(data_point_vectors)} data point vectors")
         vectors_to_be_deleted_count = len(data_point_vectors)
         deleted_vectors_count = 0
@@ -280,9 +348,6 @@ class QdrantVectorDB(BaseVectorDB):
     def list_documents_in_collection(
         self, collection_name: str, base_document_id: str = None
     ) -> List[str]:
-        """
-        List all documents in a collection
-        """
         logger.debug(
             f"[Qdrant] Listing all documents with base document id {base_document_id} for collection {collection_name}"
         )
@@ -331,9 +396,6 @@ class QdrantVectorDB(BaseVectorDB):
         return list(document_ids_set)
 
     def delete_documents(self, collection_name: str, document_ids: List[str]):
-        """
-        Delete documents from the collection
-        """
         logger.debug(
             f"[Qdrant] Deleting {len(document_ids)} documents from collection {collection_name}"
         )
@@ -342,7 +404,6 @@ class QdrantVectorDB(BaseVectorDB):
         except Exception as exp:
             logger.debug(exp)
             return
-        # https://qdrant.tech/documentation/concepts/filtering/#full-text-match
 
         for i in range(0, len(document_ids), BATCH_SIZE):
             document_ids_to_be_processed = document_ids[i : i + BATCH_SIZE]
@@ -366,9 +427,6 @@ class QdrantVectorDB(BaseVectorDB):
     def list_document_vector_points(
         self, collection_name: str
     ) -> List[DataPointVector]:
-        """
-        List all documents in a collection
-        """
         logger.debug(
             f"[Qdrant] Listing all document vector points for collection {collection_name}"
         )

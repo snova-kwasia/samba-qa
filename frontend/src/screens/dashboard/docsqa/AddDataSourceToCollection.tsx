@@ -14,11 +14,11 @@ import { MenuItem, Select } from '@mui/material'
 import React, { useState } from 'react'
 
 export const defaultParserConfigs = `{
-  "chunk_size": 500,
-  "chunk_overlap": 0,
+  "chunk_size": 1200,
+  "chunk_overlap": 300,
   "parser_map": {
     ".md": "MarkdownParser",
-    ".pdf": "PdfParserFast",
+    ".pdf": "UniversalParser",
     ".txt": "TextParser"
   }
 }`

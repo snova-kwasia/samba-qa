@@ -8,7 +8,7 @@ openai==1.35.3
 tiktoken==0.7.0
 uvicorn==0.23.2
 fastapi==0.109.1
-qdrant-client==1.9.0
+qdrant-client==1.10.0
 python-dotenv==1.0.1
 pydantic==1.10.13
 orjson==3.9.15
@@ -46,7 +46,9 @@ langsmith==0.1.91
 #unstrutured
 unstructured[all-docs]==0.13.6
 unstructured[google-drive,jira,slack]==0.13.6
-deepdoctection==0.32.0
+# deepdoctection==0.32.0
 timm==0.9.16
 python-doctr==0.8.1
 
+#embeddings
+fastembed-gpu==0.3.3

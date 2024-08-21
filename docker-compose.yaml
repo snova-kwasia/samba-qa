@@ -76,7 +76,7 @@ services:
             - cognita-docker
 
     qdrant-server:
-        image: qdrant/qdrant:v1.8.4
+        image: qdrant/qdrant:v1.10.0
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: qdrant
@@ -143,27 +143,27 @@ services:
         networks:
             - cognita-docker
 
-    cognita-slackapp:
-        build:
-            context: .
-            dockerfile: ./backend/Dockerfile
-            args:
-                - ADD_PRISMA=1
-                - ADD_PYTORCH=0
-                - ADD_PARSER=0
-        restart: unless-stopped
-        container_name: cognita-slackapp
-        depends_on:
-            cognita-backend:
-                condition: service_healthy
-                restart: true
-        env_file:
-            - ./.env
-        environment:
-            - RUN_SLACKAPP=true
-            - SAMBAQA_API_URL=http://cognita-backend:8000/retrievers/basic-rag/answer
-        networks:
-            - cognita-docker
+    # cognita-slackapp:
+    #     build:
+    #         context: .
+    #         dockerfile: ./backend/Dockerfile
+    #         args:
+    #             - ADD_PRISMA=1
+    #             - ADD_PYTORCH=0
+    #             - ADD_PARSER=0
+    #     restart: unless-stopped
+    #     container_name: cognita-slackapp
+    #     depends_on:
+    #         cognita-backend:
+    #             condition: service_healthy
+    #             restart: true
+    #     env_file:
+    #         - ./.env
+    #     environment:
+    #         - RUN_SLACKAPP=true
+    #         - SAMBAQA_API_URL=http://cognita-backend:8000/retrievers/basic-rag/answer
+    #     networks:
+    #         - cognita-docker
 
       
     cognita-frontend:
