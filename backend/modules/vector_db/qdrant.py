@@ -159,7 +159,7 @@ class QdrantVectorDB(BaseVectorDB):
         bm25_embedding_model = Bm25("Qdrant/bm25")
         late_interaction_model = LateInteractionTextEmbedding("colbert-ir/colbertv2.0")
 
-        batch_size = 64
+        batch_size = 8
 
         total_batches = (len(documents) + batch_size - 1) // batch_size
         for i in tqdm(range(0, len(documents), batch_size), total=total_batches, desc="Processing batches"):

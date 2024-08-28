@@ -7,6 +7,11 @@ from unstructured.chunking.basic import chunk_elements
 from backend.modules.parsers.utils import additional_processing
 from unstructured.staging.base import convert_to_dict
 from backend.logger import logger  # Import the logger
+import nltk
+
+nltk.download('punkt_tab')
+nltk.download('averaged_perceptron_tagger_eng')
+
 
 
 class UniversalParser(BaseParser):

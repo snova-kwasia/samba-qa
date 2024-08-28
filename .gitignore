@@ -36,3 +36,4 @@ delpoy.sh
 creds.json
 connect_to_sqa.sh
 rag_query.sh
+backend/modules/vector_db/02-hybrid-search.ipynb
